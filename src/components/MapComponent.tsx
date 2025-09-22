@@ -1,7 +1,6 @@
 import React from 'react';
 import { Platform } from 'react-native';
-import { WebMapWrapper } from './WebMapWrapper';
-import { NativeMapRenderer } from './NativeMapRenderer';
+import MapRenderer from './MapRenderer';
 import { MapComponentProps } from '../types/types';
 import { styles as globalStyles } from '../utils/styles';
 
@@ -11,24 +10,14 @@ export const MapComponent: React.FC<MapComponentProps> = ({
   address, 
   onMapPress 
 }) => {
-  // Web: Usa Google Maps
-  if (Platform.OS === 'web') {
     return (
-      <WebMapWrapper 
+      <MapRenderer 
         region={region} 
         markerCoords={markerCoords} 
         address={address} 
         onMapPress={onMapPress}
-        style={globalStyles.mapContainer}
+        style={Platform.OS === 'web' ? globalStyles.mapContainer : undefined}
       />
     );
-  }
-
-  // Mobile: Usa mapa nativo
-  return <NativeMapRenderer 
-    region={region} 
-    markerCoords={markerCoords} 
-    address={address}
-    onMapPress={onMapPress} 
-  />;
+  
 };

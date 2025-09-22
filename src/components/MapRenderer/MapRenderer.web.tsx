@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Platform, View, Text, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
 import { GoogleMap, LoadScript, Marker } from '@react-google-maps/api';
-import { Region, AddressData } from '../types/types';
+import { Region, AddressData } from '../../types/types';
 
 interface WebMapWrapperProps {
   region: Region | null;
@@ -40,7 +40,7 @@ const mapOptions = {
   ]
 };
 
-export const WebMapWrapper: React.FC<WebMapWrapperProps> = ({ 
+const WebMapWrapper: React.FC<WebMapWrapperProps> = ({ 
   region, 
   markerCoords, 
   address, 
@@ -216,3 +216,5 @@ const styles = StyleSheet.create({
     color: '#6b7280',
   },
 });
+
+export default WebMapWrapper;

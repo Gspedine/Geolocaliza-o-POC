@@ -1,17 +1,22 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { Platform, View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
-import { styles as globalStyles } from '../utils/styles';
-import { MapComponentProps } from '../types/types';
-import { MapErrorBoundary } from './MapErrorBoundary';
+import { styles as globalStyles } from '../../utils/styles';
+import { MapComponentProps } from '../../types/types';
+import { MapErrorBoundary } from '../MapErrorBoundary';
 
-interface NativeMapRendererProps extends MapComponentProps {}
+interface NativeMapRendererProps extends MapComponentProps {
+  
+  style?: any;
+}
 
-export const NativeMapRenderer: React.FC<NativeMapRendererProps> = ({ 
+const NativeMapRenderer: React.FC<NativeMapRendererProps> = ({ 
   region, 
   markerCoords, 
   address, 
-  onMapPress 
+  onMapPress,
+  
+  style
 }) => {
   const mapRef = useRef<MapView>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -94,3 +99,5 @@ const localStyles = StyleSheet.create({
     color: '#6b7280',
   },
 });
+
+export default NativeMapRenderer;
