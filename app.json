@@ -1,30 +1,51 @@
 {
   "expo": {
     "name": "GeoLocationPOC",
-    "slug": "GeoLocationPOC",
+    "slug": "geolocationpoc",
     "version": "1.0.0",
+    "sdkVersion": "54.0.0",
+    "platforms": ["ios", "android", "web"],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Este aplicativo precisa da sua localização para exibir sua posição atual, mostrá-la em um mapa e converter em endereço brasileiro."
+      },
+      "config": {
+        "googleMapsApiKey": "SUA_API_KEY_GOOGLE_MAPS_IOS"
+      }
     },
     "android": {
+      "package": "com.yourcompany.geolocationpoc",
+      "permissions": ["ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#FFFFFF"
       },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "config": {
+        "googleMaps": {
+          "apiKey": "SUA_API_KEY_GOOGLE_MAPS_ANDROID"
+        }
+      }
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro",
+      "config": {
+        "googleMaps": {
+          "apiKey": "SUA_API_KEY_GOOGLE_MAPS_WEB"
+        }
+      }
     }
   }
 }
