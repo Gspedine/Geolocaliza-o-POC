@@ -265,7 +265,8 @@ export default function App() {
         <AddressBox address={address} loading={loadingGeo} />
         
         <View style={styles.footer}>
-          <Text style={styles.footerText}>
+          
+          
             Feito com ❤️ usando React Native, Expo e LocationIQ
             {"\n"}© 2025 - GeoLocationPOC
           </Text>
