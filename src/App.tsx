@@ -266,7 +266,7 @@ export default function App() {
         
         <View style={styles.footer}>
           
-          
+
             Feito com ❤️ usando React Native, Expo e LocationIQ
             {"\n"}© 2025 - GeoLocationPOC
           </Text>
