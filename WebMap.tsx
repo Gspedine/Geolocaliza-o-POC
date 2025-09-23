@@ -30,53 +30,33 @@ export default function WebMap({
   const mapRef = useRef<google.maps.Map | null>(null);
 
   // Obtém a API key do config do Expo
-  const getGoogleMapsApiKey = () => {
-    if (typeof window !== 'undefined') {
-      // Tenta pegar do window (pode ser injetado pelo bundler)
-      return (window as any).__GOOGLE_MAPS_API_KEY || 
-             process.env.GOOGLE_MAPS_API_KEY ||
-             // Fallback para app.json (não ideal para produção)
-             'SUA_API_KEY_GOOGLE_MAPS_WEB';
-    }
-    return '';
+  const getGoogleMapsApiKey = (): string => {
+    return process.env.GOOGLE_MAPS_API_KEY || '';
   };
-
+  
   const apiKey = getGoogleMapsApiKey();
-
+  
   useEffect(() => {
     if (region && mapRef.current) {
       const newCenter = {
         lat: region.latitude,
-        lng: region.longitude
+        lng: region.longitude,
       };
       mapRef.current.setCenter(newCenter);
       mapRef.current.setZoom(15);
     }
   }, [region]);
 
-  const handleMapClick = (event: google.maps.MapMouseEvent) => {
-    if (event.latLng) {
-      const lat = event.latLng.lat();
-      const lng = event.latLng.lng();
-      onMapPress({
-        nativeEvent: {
-          coordinate: { latitude: lat, longitude: lng }
-        }
-      });
-    }
-  };
-
-  if (!apiKey || apiKey === 'SUA_API_KEY_GOOGLE_MAPS_WEB') {
+  if (!apiKey) {
     return (
       <View style={webStyles.errorContainer}>
         <Text style={webStyles.errorText}>
-          🔑 Configure sua API Key do Google Maps em app.json
-          {"\n\n"}web.config.googleMaps.apiKey
+          🔑 Configure sua variável GOOGLE_MAPS_API_KEY no arquivo .env
         </Text>
       </View>
     );
   }
-
+  
   return (
     <LoadScript googleMapsApiKey={apiKey}>
       <GoogleMap
@@ -86,22 +66,14 @@ export default function WebMap({
         onLoad={(map) => {
           mapRef.current = map;
         }}
-        onClick={handleMapClick}
+        onClick={onMapPress}
         options={{
           streetViewControl: false,
           mapTypeControl: false,
           fullscreenControl: false,
           styles: [
-            {
-              featureType: 'poi',
-              elementType: 'labels',
-              stylers: [{ visibility: 'off' }]
-            },
-            {
-              featureType: 'poi',
-              elementType: 'labels.text',
-              stylers: [{ visibility: 'on' }]
-            }
+            { featureType: 'poi', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+            { featureType: 'poi', elementType: 'labels.text', stylers: [{ visibility: 'on' }] }
           ]
         }}
       >
@@ -110,7 +82,7 @@ export default function WebMap({
             position={{ lat: markerCoords.latitude, lng: markerCoords.longitude }}
             title="Localização Selecionada"
             label={
-              address?.formatted 
+              address?.formatted
                 ? `${address.formatted.substring(0, 30)}${address.formatted.length > 30 ? '...' : ''}`
                 : 'Clique para selecionar'
             }
@@ -119,7 +91,7 @@ export default function WebMap({
       </GoogleMap>
     </LoadScript>
   );
-}
+};
 
 const webStyles = StyleSheet.create({
   errorContainer: {

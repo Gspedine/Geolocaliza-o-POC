@@ -1,10 +1,8 @@
-// src/App.tsx
 import React, { useRef, useState } from 'react';
 import {
   Alert,
   Dimensions,
   Platform,
-  SafeAreaView,
   ScrollView,
   StatusBar,
   View,
@@ -12,16 +10,16 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 import { LocationAccuracy } from 'expo-location';
-import { LocationData, AddressData, Region } from './types/types';
-import { useReverseGeocode } from './hooks/useReverseGeocode';
-import { styles } from './utils/styles';
-import { LocationButton } from './components/LocationButton';
-import { MapComponent } from './components/MapComponent';
-import { InfoBox } from './components/InfoBox';
-import { AddressBox } from './components/AddressBox';
-import { ErrorDisplay } from './components/ErrorDisplay';
-import { LoadingIndicator } from './components/LoadingIndicator';
-import { WelcomeCard } from './components/WelcomeCard';
+import { LocationData, AddressData, Region } from '@appTypes/types';
+import { useReverseGeocode } from '@hooks/useReverseGeocode';
+import { styles } from '@utils/styles';
+import { LocationButton } from '@components/LocationButton';
+import { MapComponent } from '@components/MapComponent';
+import { InfoBox } from '@components/InfoBox';
+import { AddressBox } from '@components/AddressBox';
+import { ErrorDisplay } from '@components/ErrorDisplay';
+import { LoadingIndicator } from '@components/LoadingIndicator';
+import { WelcomeCard } from '@components/WelcomeCard';
 
 const window = Dimensions.get('window');
 
@@ -40,9 +38,6 @@ export default function App() {
   const handleGetCurrentLocation = async () => {
     setLoadingLocation(true);
     setError(null);
-    let locData: LocationData | null = null;
-    let addr: AddressData | null = null;
-    
     try {
       // Web: usa geolocation do browser
       if (Platform.OS === 'web') {
@@ -61,131 +56,81 @@ export default function App() {
               } else if (error.code === error.TIMEOUT) {
                 reject(new Error('Tempo de espera da localização esgotado'));
               } else {
-                reject(new Error(`Erro de geolocalização: ${error.message}`));
+                reject(new Error('Erro desconhecido ao obter localização'));
               }
             },
-            {
-              enableHighAccuracy: true,
-              timeout: 10000,
-              maximumAge: 0,
-            }
+            { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
           );
         });
 
-        locData = {
-          coords: {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-            accuracy: position.coords.accuracy ?? 0,
-            altitude: position.coords.altitude ?? null,
-            heading: position.coords.heading ?? null,
-            speed: position.coords.speed ?? null,
-          },
-          timestamp: position.timestamp || Date.now(),
+        return {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
         };
-
-        setLocation(locData);
-        setMarkerCoords({
-          latitude: locData.coords.latitude,
-          longitude: locData.coords.longitude,
-        });
-
-        const newRegion: Region = {
-          latitude: locData.coords.latitude,
-          longitude: locData.coords.longitude,
-          latitudeDelta: 0.03,
-          longitudeDelta: (0.03 * window.width) / window.height,
-        };
-        setMapRegion(newRegion);
-
-        addr = await lookup(locData.coords.latitude, locData.coords.longitude);
-        setAddress(addr);
-
-        // Animação do mapa no Web (se disponível)
-        if (mapRef.current) {
-          mapRef.current.animateCamera({
-            center: {
-              latitude: locData.coords.latitude,
-              longitude: locData.coords.longitude,
-            },
-            zoom: 15,
-          });
-        }
-
       } else {
-        // Mobile: usa Expo Location
-        const { status } = await Location.requestForegroundPermissionsAsync();
+        // Native: usa expo-location
+        let { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
-          Alert.alert(
-            'Permissão Necessária',
-            'Habilite as permissões de localização nas configurações para obter sua posição atual.',
-            [{ text: 'OK' }]
-          );
-          setLoadingLocation(false);
-          return;
+          throw new Error('Permissão de localização negada');
         }
 
-        const pos = await Location.getCurrentPositionAsync({
+        const loc = await Location.getCurrentPositionAsync({
           accuracy: LocationAccuracy.High,
         });
 
-        locData = {
-          coords: {
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-            accuracy: pos.coords.accuracy ?? 0,
-            altitude: pos.coords.altitude ?? null,
-            heading: pos.coords.heading ?? null,
-            speed: pos.coords.speed ?? null,
-          },
-          timestamp: pos.timestamp,
+        return {
+          latitude: loc.coords.latitude,
+          longitude: loc.coords.longitude,
         };
-
-        setLocation(locData);
-        setMarkerCoords({
-          latitude: locData.coords.latitude,
-          longitude: locData.coords.longitude,
-        });
-
-        const newRegion: Region = {
-          latitude: locData.coords.latitude,
-          longitude: locData.coords.longitude,
-          latitudeDelta: 0.03,
-          longitudeDelta: (0.03 * window.width) / window.height,
-        };
-        setMapRegion(newRegion);
-
-        addr = await lookup(locData.coords.latitude, locData.coords.longitude);
-        setAddress(addr);
-
-        // Animação do mapa no mobile
-        if (mapRef.current) {
-          mapRef.current.animateCamera({
-            center: {
-              latitude: locData.coords.latitude,
-              longitude: locData.coords.longitude,
-            },
-            zoom: 15,
-          });
-        }
-      }
-
-      if (locData && addr) {
-        console.log('✅ Localização obtida com sucesso:', {
-          lat: locData.coords.latitude.toFixed(6),
-          lng: locData.coords.longitude.toFixed(6),
-          endereço: addr.formatted,
-          precisão: `${locData.coords.accuracy.toFixed(0)}m`,
-        });
       }
     } catch (err: any) {
-      console.error('❌ Erro na localização:', err);
-      const errorMessage = err?.message || 'Erro desconhecido ao obter localização';
+      const errorMessage = err?.message ?? 'Erro ao obter localização';
+      console.error('Erro ao obter localização:', errorMessage);
       setError(errorMessage);
-      
-      if (Platform.OS === 'web') {
-        Alert.alert('Erro de Localização', errorMessage);
-      }
+      Alert.alert('Erro de Localização', errorMessage);
+      return null;
+    } finally {
+      setLoadingLocation(false);
+    }
+  };
+
+  const handleConfirmLocation = async (coords: { latitude: number; longitude: number }) => {
+    setLoadingLocation(true);
+    setError(null);
+    try {
+      const newRegion: Region = {
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01 * window.width / window.height,
+      };
+      setMapRegion(newRegion);
+      setMarkerCoords(coords);
+
+      const newAddress = await lookup(coords.latitude, coords.longitude);
+      setAddress(newAddress);
+
+      setLocation({
+        coords: {
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          accuracy: 5,
+          altitude: null,
+          heading: null,
+          speed: null,
+        },
+        timestamp: Date.now(),
+      });
+
+      console.log('🗺️ Localização confirmada:', {
+        latitude: coords.latitude.toFixed(6),
+        longitude: coords.longitude.toFixed(6),
+      });
+    } catch (err: any) {
+      const errorMessage = err?.message ?? 'Erro ao processar localização';
+      console.error('Erro ao confirmar localização:', errorMessage);
+      setError(errorMessage);
+      Alert.alert('Erro', errorMessage);
     } finally {
       setLoadingLocation(false);
     }
@@ -196,7 +141,6 @@ export default function App() {
       const { latitude, longitude } = event.nativeEvent.coordinate;
       setMarkerCoords({ latitude, longitude });
       
-      // Atualiza região do mapa
       const newRegion: Region = {
         latitude,
         longitude,
@@ -205,16 +149,14 @@ export default function App() {
       };
       setMapRegion(newRegion);
 
-      // Busca novo endereço
       const newAddress = await lookup(latitude, longitude);
       setAddress(newAddress);
       
-      // Cria dados de localização simulados para o InfoBox
       setLocation({
         coords: {
           latitude,
           longitude,
-          accuracy: 5, // Precisão simulada
+          accuracy: 5,
           altitude: null,
           heading: null,
           speed: null,
@@ -230,7 +172,7 @@ export default function App() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#f8fafc" />
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
@@ -242,6 +184,7 @@ export default function App() {
           onPress={handleGetCurrentLocation} 
           loading={loadingLocation}
           disabled={loadingGeo}
+          onConfirm={handleConfirmLocation}
         />
         
         <LoadingIndicator 
@@ -253,14 +196,7 @@ export default function App() {
           error={error || reverseGeoError} 
           onRetry={handleGetCurrentLocation} 
         />
-        
-        <MapComponent 
-          region={mapRegion} 
-          markerCoords={markerCoords} 
-          address={address ?? undefined}
-          onMapPress={handleMapPress} 
-        />
-        
+             
         <InfoBox location={location} />
         <AddressBox address={address} loading={loadingGeo} />
         
@@ -271,6 +207,6 @@ export default function App() {
           </Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
